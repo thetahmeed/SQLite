@@ -1,0 +1,29 @@
+1. MainActivity.java
+delete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String userId = id.getText().toString();
+                int value = my_Database_Helper.DeleteData(userId);
+                if (value > 0){
+                    Toast.makeText(MainActivity.this, "Deleted", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(MainActivity.this, "Not deleted", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
+
+2. MyDatabase.java
+delete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String userId = id.getText().toString();
+                int value = my_Database_Helper.DeleteData(userId);
+                if (value > 0){
+                    Toast.makeText(MainActivity.this, "Deleted", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(MainActivity.this, "Not deleted", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
