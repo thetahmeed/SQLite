@@ -1,0 +1,182 @@
+1. DataBaseHelper.java
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.widget.Toast;
+import androidx.annotation.Nullable;
+
+public class DatabaseHelper extends SQLiteOpenHelper {
+
+    private static final String DATABASE_NAME = "userdetails.db";
+    private static final String TABLE_NAME = "user_details";
+    private static final String ID = "Id";
+    private static final String NAME = "Name";
+    private static final String EMAIL = "Email";
+    private static final String USERNAME = "Username";
+    private static final String PASSWORD = "Password";
+    private static final int VERSION_NUMBER = 7;
+
+    private static final String CREATE_TABLE = "CREATE TABLE "+TABLE_NAME+" ("+ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+NAME+" VARCHAR(255) NOT NULL, "+EMAIL+" TEXT NOT NULL, "+USERNAME+" TEXT NOT NULL, "+PASSWORD+" TEXT NOT NULL);";
+    private static final String DROP_TABLE = " DROP TABLE IF EXISTS "+TABLE_NAME;
+    private Context context;
+
+    public DatabaseHelper(Context context) {
+        super(context, DATABASE_NAME, null, VERSION_NUMBER);
+        this.context = context;
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        try {
+            sqLiteDatabase.execSQL(CREATE_TABLE);
+            Toast.makeText(context, "onCteate is called", Toast.LENGTH_SHORT).show();
+        }catch (Exception e){
+            Toast.makeText(context, "Exception: "+e, Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+        try {
+            Toast.makeText(context, "onUpdrade is called", Toast.LENGTH_SHORT).show();
+            sqLiteDatabase.execSQL(DROP_TABLE);
+            onCreate(sqLiteDatabase);
+        }catch (Exception e){
+            Toast.makeText(context, "Exception: "+e, Toast.LENGTH_SHORT).show();
+        }
+
+
+    }
+
+    public long insertData(UserDetails userDetails){
+
+        SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(NAME, userDetails.getName());
+        contentValues.put(USERNAME, userDetails.getUsername());
+        contentValues.put(EMAIL, userDetails.getEmail());
+        contentValues.put(PASSWORD, userDetails.getPassword());
+
+        long rawId = sqLiteDatabase.insert(TABLE_NAME, null, contentValues);
+
+        return rawId;
+    }
+
+    public Boolean matchPassword(String username, String password){
+
+        SQLiteDatabase sqLiteDatabase = this.getReadableDatabase();
+        Cursor cursor = sqLiteDatabase.rawQuery("SELECT * FROM "+TABLE_NAME, null);
+        Boolean result = false;
+
+        if (cursor.getCount()==0){
+            Toast.makeText(context, "Data not found", Toast.LENGTH_SHORT).show();
+        }else{
+            while (cursor.moveToNext()){
+                String username_db = cursor.getString(3);
+                String password_db = cursor.getString(4);
+
+                if (username_db.equals(username) && password_db.equals(password)){
+                    result = true;
+                    break;
+                }
+
+            }
+        }
+
+        return result;
+    }
+
+}
+
+2. MainActivity.java
+    DatabaseHelper databaseHelper;
+    private EditText sign_in_username, sign_in_password;
+    private Button sign_in, sign_up;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        sign_in_username = findViewById(R.id.sign_in_username);
+        sign_in_password = findViewById(R.id.sign_in_password);
+
+        sign_in = findViewById(R.id.sign_in);
+        sign_up = findViewById(R.id.sign_up);
+
+        databaseHelper = new DatabaseHelper(this);
+        SQLiteDatabase sqLiteDatabase = databaseHelper.getWritableDatabase();
+
+        sign_in.setOnClickListener(this);
+        sign_up.setOnClickListener(this);
+
+    }
+
+    @Override
+    public void onClick(View view) {
+
+        String username = sign_in_username.getText().toString();
+        String password = sign_in_password.getText().toString();
+
+        if (view.getId()==R.id.sign_in){
+
+            Boolean result = databaseHelper.matchPassword(username, password);
+
+            if (result == true){
+                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                startActivity(intent);
+            }else {
+                Toast.makeText(this, "Wrong password...", Toast.LENGTH_SHORT).show();
+            }
+
+        }else if (view.getId()==R.id.sign_up){
+            Intent intent = new Intent(MainActivity.this, SignUpActivity.class);
+            startActivity(intent);
+        }
+    }
+}
+
+3. UserDetails.java
+public class UserDetails {
+
+    private String name, username, email, password;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+
+}
