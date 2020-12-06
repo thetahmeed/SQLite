@@ -14,16 +14,10 @@ delete.setOnClickListener(new View.OnClickListener() {
         });
 
 2. MyDatabase.java
-delete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String userId = id.getText().toString();
-                int value = my_Database_Helper.DeleteData(userId);
-                if (value > 0){
-                    Toast.makeText(MainActivity.this, "Deleted", Toast.LENGTH_SHORT).show();
-                }else{
-                    Toast.makeText(MainActivity.this, "Not deleted", Toast.LENGTH_SHORT).show();
-                }
 
-            }
-        });
+ public int deleteData(String id){
+        SQLiteDatabase sqLiteDatabase = this.getReadableDatabase();
+        int value = sqLiteDatabase.delete(TABLE_NAME, ID+" = ?", new String[] {id});
+
+        return value;
+    }
