@@ -1,0 +1,200 @@
+1. MyDatabaseHelper.java
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+
+public class MyDatabaseHelper extends SQLiteOpenHelper {
+
+    private static final String DATABASE_NAME = "userinfo.db";
+    private static final String TABLE_NAME = "user_info";
+    private static final String ID = "Id";
+    private static final String NAME = "Name";
+    private static final int VERSION_NUMBER = 2;
+
+    private static final String CREATE_TABLE = "CREATE TABLE "+TABLE_NAME+" ("+ID+" INTEGER PRIMARY KEY, "+NAME+" VARCHAR(255));";
+    private static final String DROP_TABLE = "";
+    private Context context;
+
+    public MyDatabaseHelper(Context context) {
+        super(context, DATABASE_NAME, null, VERSION_NUMBER);
+        this.context = context;
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        try {
+            sqLiteDatabase.execSQL(CREATE_TABLE);
+            Toast.makeText(context, "onCreate is Called", Toast.LENGTH_SHORT).show();
+        }catch (Exception e){
+            Toast.makeText(context, "Exception : "+e, Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+        try {
+            Toast.makeText(context, "onUpgrade is Called", Toast.LENGTH_SHORT).show();
+            sqLiteDatabase.execSQL("DROP TABLE IF EXISTS "+TABLE_NAME);
+            onCreate(sqLiteDatabase);
+            Toast.makeText(context, "onCreate is Called", Toast.LENGTH_SHORT).show();
+        }catch (Exception e){
+            Toast.makeText(context, "Exception : "+e, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public long saveData(String id, String name){
+        SQLiteDatabase sqLiteDatabase = this.getReadableDatabase();
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put(ID, id);
+        contentValues.put(NAME, name);
+
+        long rawNumber = sqLiteDatabase.insert(TABLE_NAME, null, contentValues);
+
+        return rawNumber;
+
+    }
+
+    public Cursor viewData(){
+        SQLiteDatabase sqLiteDatabase = this.getReadableDatabase();
+        Cursor cursor = sqLiteDatabase.rawQuery("SELECT * FROM "+TABLE_NAME, null);
+        return cursor;
+    }
+
+    public Boolean updateData(String id, String name){
+        SQLiteDatabase sqLiteDatabase = this.getReadableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(ID, id);
+        contentValues.put(NAME, name);
+        sqLiteDatabase.update(TABLE_NAME, contentValues, ID+" = ?", new String[] {id});
+        return true;
+    }
+
+    public int deleteData(String id){
+        SQLiteDatabase sqLiteDatabase = this.getReadableDatabase();
+        int value = sqLiteDatabase.delete(TABLE_NAME, ID+" = ?", new String[] {id});
+
+        return value;
+    }
+
+}
+
+2. MainActivity
+EditText enter_id, enter_name;
+    Button save, view, update, delete;
+    MyDatabaseHelper myDatabaseHelper;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        enter_id = findViewById(R.id.enter_id);
+        enter_name = findViewById(R.id.enter_name);
+
+        save = findViewById(R.id.save);
+        view = findViewById(R.id.view);
+        update = findViewById(R.id.update);
+        delete = findViewById(R.id.delete);
+
+        myDatabaseHelper = new MyDatabaseHelper(this);
+        SQLiteDatabase sqLiteDatabase = myDatabaseHelper.getWritableDatabase();
+
+        save.setOnClickListener(this);
+        view.setOnClickListener(this);
+        update.setOnClickListener(this);
+        delete.setOnClickListener(this);
+
+    }
+
+    @Override
+    public void onClick(View view) {
+        String id = enter_id.getText().toString();
+        String name = enter_name.getText().toString();
+
+        if (view.getId()==R.id.save){
+
+            if (id.equals("") && name.equals("")){
+                Toast.makeText(this, "Please fill all the blanks", Toast.LENGTH_SHORT).show();
+            }else {
+                long rawNumber = myDatabaseHelper.saveData(id, name);
+
+                if(rawNumber>0){
+                    Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show();
+                    enter_id.setText("");
+                    enter_name.setText("");
+
+                }else{
+                    Toast.makeText(this, "Unable to save data", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+        }else if(view.getId()==R.id.view){
+            Intent intent = new Intent(MainActivity.this, ViewData.class);
+            startActivity(intent);
+
+        }else if(view.getId()==R.id.update){
+            Boolean result = myDatabaseHelper.updateData(id, name);
+            if (result == true){
+                Toast.makeText(this, "Data is updated", Toast.LENGTH_SHORT).show();
+            } else{
+                Toast.makeText(this, "Data is not updated", Toast.LENGTH_SHORT).show();
+            }
+
+        }else if(view.getId()==R.id.delete){
+            int result = myDatabaseHelper.deleteData(id);
+            if (result>0){
+                Toast.makeText(this, "Deleted", Toast.LENGTH_SHORT).show();
+            }else{
+                Toast.makeText(this, "Not deleted", Toast.LENGTH_SHORT).show();
+            }
+
+        }
+    }
+
+3. ViewData.java
+ListView listView;
+    MyDatabaseHelper myDatabaseHelper;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_view_data);
+
+        listView = findViewById(R.id.listView);
+        myDatabaseHelper = new MyDatabaseHelper(this);
+        loadData();
+
+    }
+
+    public void loadData(){
+        ArrayList<String> arrayList = new ArrayList<String>();
+        Cursor cursor = myDatabaseHelper.viewData();
+
+        if (cursor.getCount()==0){
+            Toast.makeText(this, "No data is available", Toast.LENGTH_SHORT).show();
+        }else{
+            while (cursor.moveToNext()){
+                arrayList.add(cursor.getString(0)+" \t "+cursor.getString(1));
+            }
+        }
+
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, arrayList);
+        listView.setAdapter(arrayAdapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                String value = adapterView.getItemAtPosition(i).toString();
+                Toast.makeText(ViewData.this, value, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+    }
