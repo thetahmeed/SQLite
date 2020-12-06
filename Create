@@ -1,0 +1,99 @@
+CREATE TABLE Student ( _id INTEGER PRIMARY KEY AUTOINCREMENT, Name VARCAT(255), Age INTEGER );
+
+// things that you should know:
+1. SQLiteOpenHelper Class => to open, modify, upgrade.
+2. super(); method => to create, open, manage database.
+3. onCreate() method => Called when database is open for the first time.
+4. onUpgrade() method => Called in upgrading time.
+5. getWrittableDatabase => to read and write and it will return SQLiteDatabase.
+
+// Let's do it
+1. Create a new java class with any title.
+2. extends SQLiteOpenHelper.
+3. implements methods and create constructor.
+// like this
+
+package com.tahmeedul.sqliteprac;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+
+public class MyDatabase extends SQLiteOpenHelper {
+    // creating database database name and table name
+    private static final String DATABASE_NAME = "Student.db";
+    private static final String TABLE_NAME = "student_details";
+    // creating raw
+    private static final String ID = "_id";
+    private static final String NAME = "Name";
+    private static final String AGE = "Age";
+    private static final String GENDER = "Gender";
+    private static final String COUNTRY = "Country";
+// every time you have to update the version number to upgrade the table
+    private static final int VERSION_NUMBER = 2;
+    // command to create a database
+    private static final String CREATE_TABLE = "CREATE TABLE "+TABLE_NAME+" ( "+ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+NAME+" VARCHAR(255), "+AGE+" INTEGER, "+GENDER+" VARCHAR(15), "+COUNTRY+" VARCHAR(15) ); ";
+    // to DROP the table for upgrade
+    private static final String DROP_TABLE = "DROP TABLE IF EXISTS "+TABLE_NAME;
+    private Context context;
+
+    public MyDatabase(Context context) {
+        super(context, DATABASE_NAME, null, VERSION_NUMBER);
+        this.context = context;
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        // creating data base
+        try {
+            sqLiteDatabase.execSQL(CREATE_TABLE);
+            Toast.makeText(context, "onCteate is called", Toast.LENGTH_SHORT).show();
+        }catch (Exception e){
+            Toast.makeText(context, "Exception: "+e, Toast.LENGTH_SHORT).show();
+        }
+        
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+        try {
+            Toast.makeText(context, "onUpdrade is called", Toast.LENGTH_SHORT).show();
+            // to make upgrade. in top we have added a new raw called Gender. And here we have to make changes
+            sqLiteDatabase.execSQL(DROP_TABLE);
+            // recalling onCreate
+            onCreate(sqLiteDatabase);
+        }catch (Exception e){
+            Toast.makeText(context, "Exception: "+e, Toast.LENGTH_SHORT).show();
+        }
+
+
+    }
+}
+
+// in MainActivity.java
+
+    MyDatabase my_Database_Helper;
+    EditText name, age, gender, country, id;
+    Button save, view, update, delete;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        name = findViewById(R.id.enter_name);
+        age = findViewById(R.id.enter_age);
+        gender = findViewById(R.id.enter_gender);
+        country = findViewById(R.id.enter_country);
+        id = findViewById(R.id.enter_id);
+
+        save = findViewById(R.id.save_button);
+        view = findViewById(R.id.view_button);
+        update = findViewById(R.id.update_button);
+        delete = findViewById(R.id.delete_button);
+
+        my_Database_Helper = new MyDatabase(this);
+        SQLiteDatabase sqLiteDatabase = my_Database_Helper.getWritableDatabase();
