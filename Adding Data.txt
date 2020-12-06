@@ -1,0 +1,36 @@
+1. in main activity
+
+                save.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                String userName = name.getText().toString();
+                String userAge = age.getText().toString();
+                String userGender = gender.getText().toString();
+                String userCountry = country.getText().toString();
+
+                long rawId = my_Database_Helper.AddData(userName, userAge, userGender, userCountry);
+                  if (rawId == -1){
+                    Toast.makeText(MainActivity.this, "Failed", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "Info added in "+rawId, Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
+
+
+2. in MyDatabase.java
+
+public long AddData(String name, String age, String gender, String country)
+    {
+        SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(NAME, name);
+        contentValues.put(AGE, age);
+        contentValues.put(GENDER, gender);
+        contentValues.put(COUNTRY, country);
+        long rawId = sqLiteDatabase.insert(TABLE_NAME, null, contentValues);
+
+        return rawId;
+    }
