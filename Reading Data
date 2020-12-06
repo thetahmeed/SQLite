@@ -1,0 +1,41 @@
+1. MainActivity.java
+
+view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Cursor cursor = my_Database_Helper.ViewData();
+                if (cursor.getCount()==0){
+                    showData("ERROR", "No data found");
+                }
+                StringBuffer stringBuffer = new StringBuffer();
+                while (cursor.moveToNext()){
+                    stringBuffer.append("ID : "+cursor.getString(0)+"\n");
+                    stringBuffer.append("NAME : "+cursor.getString(1)+"\n");
+                    stringBuffer.append("AGE : "+cursor.getString(2)+"\n");
+                    stringBuffer.append("GENDER : "+cursor.getString(3)+"\n");
+                    stringBuffer.append("COUNTRY : "+cursor.getString(4)+"\n\n\n");
+
+                    showData("RESULT", stringBuffer.toString());
+                }
+
+            }
+        });
+
+// also this method
+public void showData(String title, String result){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setMessage(result);
+        builder.show();
+    }
+
+2. MyDatabase.java
+
+    public Cursor ViewData()
+    {
+        SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
+        Cursor cursor = sqLiteDatabase.rawQuery(" SELECT * FROM " +TABLE_NAME, null);
+
+        return cursor;
+
+    }
